@@ -8,7 +8,7 @@ exports.getProducts = (req, res, next) => {
         prods: products,
         pageTitle: 'All Products',
         path: '/products',
-        isAuthenticated: false,
+        isAuthenticated: req.session.isLoggedIn,
       })
     })
     .catch((err) => {
@@ -24,7 +24,7 @@ exports.getProduct = (req, res, next) => {
         product: product,
         pageTitle: product.title,
         path: '/products',
-        isAuthenticated: false,
+        isAuthenticated: req.session.isLoggedIn,
       })
     })
     .catch((err) => console.log(err))
@@ -37,7 +37,7 @@ exports.getIndex = (req, res, next) => {
         prods: products,
         pageTitle: 'Shop',
         path: '/',
-        isAuthenticated: false,
+        isAuthenticated: req.session.isLoggedIn,
       })
     })
     .catch((err) => {
@@ -55,7 +55,7 @@ exports.getCart = (req, res, next) => {
         path: '/cart',
         pageTitle: 'Your Cart',
         products: products,
-        isAuthenticated: false,
+        isAuthenticated: req.session.isLoggedIn,
       })
     })
     .catch((err) => console.log(err))
@@ -90,7 +90,10 @@ exports.postOrder = (req, res, next) => {
     .then((user) => {
       const products = user.cart.items.map((product) => {
         // ._doc provides only the central data
-        return { quantity: product.quantity, productData: { ...product.productId._doc} }
+        return {
+          quantity: product.quantity,
+          productData: { ...product.productId._doc },
+        }
       })
       const order = new Order({
         products: products,
@@ -101,7 +104,7 @@ exports.postOrder = (req, res, next) => {
       })
       return order.save()
     })
-    .then(result => {
+    .then((result) => {
       return req.user.clearCart()
     })
     .then((result) => {
@@ -113,13 +116,13 @@ exports.postOrder = (req, res, next) => {
 }
 
 exports.getOrders = (req, res, next) => {
- Order.find({"user.userId": req.user._id})
+  Order.find({ 'user.userId': req.user._id })
     .then((orders) => {
       res.render('shop/orders', {
         path: '/orders',
         pageTitle: 'Your Orders',
         orders: orders,
-        isAuthenticated: false,
+        isAuthenticated: req.session.isLoggedIn,
       })
     })
     .catch((err) => console.log(err))

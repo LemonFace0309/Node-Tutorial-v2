@@ -13,7 +13,7 @@ const app = express()
 const store = new MongoDBStore({
   uri: process.env.MONGOOSE_URI,
   collection: 'sessions',
-})
+}) // fetches data from mongodb but not as an object like how mongoose would.
 
 app.set('view engine', 'ejs')
 app.set('views', 'views')
@@ -25,11 +25,20 @@ const authRoutes = require('./routes/auth')
 app.use(express.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(
-  session({ secret: 'my secret', resave: false, saveUninitialized: false, store: store })
+  session({
+    secret: 'my secret',
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
 )
 
+// re-add middleware so mongoose methods will work with req.session again
 app.use((req, res, next) => {
-  User.findById('6072a792f323cc22801c8abd')
+  if (!req.session.user) {
+    return next()
+  }
+  User.findById(req.session.user._id)
     .then((user) => {
       req.user = user
       next()
