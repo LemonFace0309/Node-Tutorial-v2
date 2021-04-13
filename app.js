@@ -33,7 +33,7 @@ app.use(
   })
 )
 
-// re-add middleware so mongoose methods will work with req.session again
+// adds middleware so mongoose methods will work with req.session again
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next()

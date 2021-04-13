@@ -10,6 +10,14 @@ exports.getLogin = (req, res, next) => {
   })
 }
 
+exports.getSignup = (req, res, next) => {
+  res.render('auth/signup', {
+    path: '/signup',
+    pageTitle: 'Signup',
+    isAuthenticated: false,
+  })
+}
+
 exports.postLogin = (req, res, next) => {
   // res.setHeader('Set-Cookie', 'loggedIn=true')
   User.findById('6072a792f323cc22801c8abd')
@@ -20,13 +28,15 @@ exports.postLogin = (req, res, next) => {
       req.session.user = user
       // usually unnecessary but we added it so res.redirect('/')
       //   doesn't occur before req.session finishes sending data to the store
-      req.session.save(err => {
+      req.session.save((err) => {
         console.log(err)
         res.redirect('/')
-      }) 
+      })
     })
     .catch((err) => console.log(err))
 }
+
+exports.postSignup = (req, res, next) => {}
 
 exports.postLogout = (req, res, next) => {
   req.session.destroy((err) => {
