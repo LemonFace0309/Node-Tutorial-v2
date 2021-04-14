@@ -5,6 +5,7 @@ const mongoose = require('mongoose')
 const session = require('express-session')
 const MongoDBStore = require('connect-mongodb-session')(session)
 const csrf = require('csurf')
+const flash = require('connect-flash')
 require('dotenv').config()
 
 const errorController = require('./controllers/error')
@@ -15,7 +16,6 @@ const store = new MongoDBStore({
   uri: process.env.MONGOOSE_URI,
   collection: 'sessions',
 }) // fetches data from mongodb but not as an object like how mongoose would.
-const csrfProtection = csrf()
 
 app.set('view engine', 'ejs')
 app.set('views', 'views')
@@ -34,7 +34,8 @@ app.use(
     store: store,
   })
 )
-app.use(csrfProtection)
+app.use(csrf())
+app.use(flash())
 
 // adds middleware so mongoose methods will work with req.session again
 app.use((req, res, next) => {

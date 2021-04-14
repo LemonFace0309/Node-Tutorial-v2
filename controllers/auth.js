@@ -5,10 +5,12 @@ const User = require('../models/user')
 exports.getLogin = (req, res, next) => {
   // const isLoggedIn =
   //   req.get('Cookie').split(';')[1].trim().split('=')[1] == true
+  const errorFlash = req.flash('error')
+  const error = errorFlash.length > 0 ? errorFlash[0] : null 
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    isAuthenticated: false,
+    errorMessage: error
   })
 }
 
@@ -16,7 +18,6 @@ exports.getSignup = (req, res, next) => {
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'Signup',
-    isAuthenticated: false,
   })
 }
 
@@ -26,6 +27,7 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ email: email })
     .then((user) => {
       if (!user) {
+        req.flash('error', 'Invalid email or password.')
         return res.redirect('/login')
       }
       return bcrypt
