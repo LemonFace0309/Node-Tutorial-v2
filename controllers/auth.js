@@ -6,18 +6,21 @@ exports.getLogin = (req, res, next) => {
   // const isLoggedIn =
   //   req.get('Cookie').split(';')[1].trim().split('=')[1] == true
   const errorFlash = req.flash('error')
-  const error = errorFlash.length > 0 ? errorFlash[0] : null 
+  const error = errorFlash.length > 0 ? errorFlash[0] : null
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    errorMessage: error
+    errorMessage: error,
   })
 }
 
 exports.getSignup = (req, res, next) => {
+  const errorFlash = req.flash('error')
+  const error = errorFlash.length > 0 ? errorFlash[0] : null
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'Signup',
+    errorMessage: error,
   })
 }
 
@@ -43,6 +46,7 @@ exports.postLogin = (req, res, next) => {
               res.redirect('/')
             })
           }
+          req.flash('error', 'Invalid password')
           return res.redirect('/login')
         })
         .catch((err) => {
@@ -80,6 +84,7 @@ exports.postSignup = (req, res, next) => {
   User.findOne({ email: email })
     .then((userDoc) => {
       if (userDoc) {
+        req.flash('error', 'Email already exists!')
         return res.redirect('/signup')
       }
       return bcrypt
