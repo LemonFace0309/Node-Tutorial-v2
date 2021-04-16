@@ -13,8 +13,8 @@ router.get('/signup', authController.getSignup)
 router.post(
   '/login',
   [
-    body('email', 'Please use a valid email').isEmail(),
-    body('password', 'Password must be valid').isLength({ min: 5 }),
+    body('email', 'Please use a valid email').isEmail().normalizeEmail(),
+    body('password', 'Password must be valid').isLength({ min: 5 }).trim(),
   ],
   authController.postLogin
 )
@@ -37,16 +37,20 @@ router.post(
           }
           // if promise is not rejected, validation is treated as successful
         })
-      }),
+      })
+      .normalizeEmail(),
     body('password', 'Please ensure your password is at least 5 letters long')
       // .isAlphanumeric()
-      .isLength({ min: 5 }),
-    body('confirmPassword').custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Please ensure your passwords match')
-      }
-      return true
-    }),
+      .isLength({ min: 5 })
+      .trim(),
+    body('confirmPassword')
+      .trim()
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error('Please ensure your passwords match')
+        }
+        return true
+      }),
   ],
   authController.postSignup
 )
