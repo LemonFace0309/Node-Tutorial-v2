@@ -65,9 +65,16 @@ app.use('/admin', adminRoutes)
 app.use(shopRoutes)
 app.use(authRoutes)
 
-app.get('/500', errorController.get505)
+app.get('/500', errorController.get500)
 
 app.use(errorController.get404)
+
+// special type of middleware for error handling
+app.use((err, req, res, next) => {
+  console.log(err)
+  // res.render(err.httpStatusCode).render('/500')
+  res.redirect('/500')
+})
 
 mongoose
   .connect(process.env.MONGOOSE_URI, {

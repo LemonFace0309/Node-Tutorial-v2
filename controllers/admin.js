@@ -55,7 +55,9 @@ exports.postAddProduct = (req, res, next) => {
       res.redirect('/admin/products')
     })
     .catch((err) => {
-      console.log(err)
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      return next(err)
     })
 }
 
@@ -81,7 +83,9 @@ exports.getEditProduct = (req, res, next) => {
       })
     })
     .catch((err) => {
-      return res.redirect('/500')
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      return next(err)
     })
 }
 
@@ -127,7 +131,11 @@ exports.postEditProduct = (req, res, next) => {
         res.redirect('/admin/products')
       })
     })
-    .catch((err) => console.log(err))
+    .catch((err) => {
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      return next(err)
+    })
 }
 
 exports.getProducts = (req, res, next) => {
@@ -141,7 +149,11 @@ exports.getProducts = (req, res, next) => {
         path: '/admin/products',
       })
     })
-    .catch((err) => console.log(err))
+    .catch((err) => {
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      return next(err)
+    })
 }
 
 exports.postDeleteProduct = (req, res, next) => {
@@ -151,5 +163,9 @@ exports.postDeleteProduct = (req, res, next) => {
     .then(() => {
       res.redirect('/admin/products')
     })
-    .catch((err) => console.log(err))
+    .catch((err) => {
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      return next(err)
+    })
 }
