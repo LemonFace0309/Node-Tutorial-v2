@@ -6,6 +6,7 @@ const session = require('express-session')
 const MongoDBStore = require('connect-mongodb-session')(session)
 const csrf = require('csurf')
 const flash = require('connect-flash')
+const multer = require('multer')
 require('dotenv').config()
 
 const errorController = require('./controllers/error')
@@ -17,6 +18,25 @@ const store = new MongoDBStore({
   collection: 'sessions',
 }) // fetches data from mongodb but not as an object like how mongoose would.
 
+const fileStorage = multer.diskStorage({
+  destination: 'images',
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+})
+
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === 'image/png' ||
+    file.mimetype === 'image/jpg' ||
+    file.mimetype === 'image/jpeg'
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+}
+
 app.set('view engine', 'ejs')
 app.set('views', 'views')
 
@@ -25,7 +45,11 @@ const shopRoutes = require('./routes/shop')
 const authRoutes = require('./routes/auth')
 
 app.use(express.urlencoded({ extended: false }))
+app.use(
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
+)
 app.use(express.static(path.join(__dirname, 'public')))
+app.use('/images', express.static(path.join(__dirname, 'images')))
 app.use(
   session({
     secret: 'my secret',
@@ -36,6 +60,12 @@ app.use(
 )
 app.use(csrf())
 app.use(flash())
+
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn
+  res.locals.csrfToken = req.csrfToken()
+  next()
+})
 
 // adds middleware so mongoose methods will work with req.session again
 app.use((req, res, next) => {
@@ -51,14 +81,10 @@ app.use((req, res, next) => {
       next()
     })
     .catch((err) => {
-      throw new Error(err)
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      next(error)
     })
-})
-
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.session.isLoggedIn
-  res.locals.csrfToken = req.csrfToken()
-  next()
 })
 
 app.use('/admin', adminRoutes)
@@ -72,7 +98,10 @@ app.use(errorController.get404)
 // special type of middleware for error handling
 app.use((err, req, res, next) => {
   console.log(err)
-  // res.render(err.httpStatusCode).render('/500')
+  // res.status(err.httpStatusCode).render('500', {
+  //   pageTitle: 'Error!',
+  //   path: '/500',
+  // })
   res.redirect('/500')
 })
 
