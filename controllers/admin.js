@@ -80,7 +80,9 @@ exports.getEditProduct = (req, res, next) => {
         validationErrors: [],
       })
     })
-    .catch((err) => console.log(err))
+    .catch((err) => {
+      return res.redirect('/500')
+    })
 }
 
 exports.postEditProduct = (req, res, next) => {
@@ -93,7 +95,6 @@ exports.postEditProduct = (req, res, next) => {
   const errors = validationResult(req)
 
   if (!errors.isEmpty()) {
-    console.log(errors.array())
     return res.status(422).render('admin/edit-product', {
       pageTitle: 'Edit Product',
       path: '/admin/edit-product',
