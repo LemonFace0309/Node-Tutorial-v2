@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 
+const PDFDocument = require('pdfkit')
+
 const Product = require('../models/product')
 const Order = require('../models/order')
 
@@ -161,6 +163,15 @@ exports.getInvoice = (req, res, next) => {
       const invoiceName = 'invoice-' + orderId + '.pdf'
       const invoicePath = path.join('data', 'invoices', invoiceName)
 
+      const pdfDoc = new PDFDocument()
+      // writes pdf onto server
+      pdfDoc.pipe(fs.createWriteStream(invoicePath))
+      // pipe readable stream into writable stream (res is a writeable stream)
+      pdfDoc.pipe(res)
+
+      pdfDoc.text('Hello world!')
+      pdfDoc.end()
+
       // READING FILES IS EXTREMELY INEFFICIENT
       // fs.readFile(invoicePath, (err, data) => {
       //   if (err) {
@@ -174,12 +185,10 @@ exports.getInvoice = (req, res, next) => {
       //   )
       //   res.send(data)
       // })
-      const file = fs.createReadStream(invoicePath)
-      res.setHeader('Content-Type', 'application/pdf')
-      // can also use 'Content-Disposition', 'attachment;...'
-      res.setHeader('Content-Disposition', `inline; filename="${invoiceName}"`)
-      // piped readable stream into writable stream (res is a writeable stream)
-      file.pipe(res)
+
+      // PIPING FILES TO USER
+      // const file = fs.createReadStream(invoicePath)
+      // file.pipe(res)
     })
     .catch((err) => {
       return next(err)
