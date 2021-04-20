@@ -169,7 +169,27 @@ exports.getInvoice = (req, res, next) => {
       // pipe readable stream into writable stream (res is a writeable stream)
       pdfDoc.pipe(res)
 
-      pdfDoc.text('Hello world!')
+      pdfDoc.fontSize(26).text('Invoice', {
+        bold: true,
+        underline: true,
+      })
+      pdfDoc.text('------------------')
+      pdfDoc.fontSize(14)
+      let sum = 0;
+      order.products.forEach((prod) => {
+        sum += prod.productData.price * prod.quantity
+        pdfDoc.text(
+          prod.productData.title +
+            ' - ' +
+            prod.quantity +
+            ' x ' +
+            '$' +
+            prod.productData.price
+        )
+      })
+      pdfDoc.text('---')
+      pdfDoc.fontSize(20).text('Total Price: $' + sum)
+
       pdfDoc.end()
 
       // READING FILES IS EXTREMELY INEFFICIENT
