@@ -6,7 +6,7 @@ const deleteProduct = (btn) => {
 
   fetch('/admin/product/' + productId, {
     method: 'DELETE',
-    // csruf also looks into query parameters and
+    // csrf also looks into query parameters and
     //   request headers for csrf tokens. Not just the
     //   request body.
     headers: {

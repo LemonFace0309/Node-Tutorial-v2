@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
+require('dotenv').config()
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const PDFDocument = require('pdfkit')
 
 const Product = require('../models/product')
@@ -135,21 +137,76 @@ exports.postCartDeleteProduct = (req, res, next) => {
 }
 
 exports.getCheckout = (req, res, next) => {
+  let products
+  let totalSum = 0
   req.user
     .populate('cart.items.productId')
     .execPopulate()
     .then((user) => {
-      const products = user.cart.items
-      const totalSum = products.reduce((acc, product) => {
+      products = user.cart.items
+      totalSum = products.reduce((acc, product) => {
         console.log(product.productId.price * product.quantity)
         return acc + product.productId.price * product.quantity
       }, 0)
+
+      return stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: products.map((p) => {
+          return {
+            name: p.productId.title,
+            description: p.productId.description,
+            amount: p.productId.price * 100,
+            currency: 'cad',
+            quantity: p.quantity,
+          }
+        }),
+        success_url:
+          req.protocol + '://' + req.get('host') + '/checkout/success',
+        cancel_url: req.protocol + '://' + req.get('host') + '/checkout/cancel',
+      })
+    })
+    .then((session) => {
       res.render('shop/checkout', {
         path: '/checkout',
         pageTitle: 'Checkout',
         products: products,
         totalSum: totalSum.toFixed(2),
+        sessionId: session.id,
       })
+    })
+    .catch((err) => {
+      const error = new Error(err)
+      error.httpStatusCode = 500
+      return next(err)
+    })
+}
+
+exports.getCheckoutSuccess = (req, res, next) => {
+  req.user
+    .populate('cart.items.productId') // does not return a promise
+    .execPopulate() // returns a promise
+    .then((user) => {
+      const products = user.cart.items.map((product) => {
+        // ._doc provides only the central data
+        return {
+          quantity: product.quantity,
+          productData: { ...product.productId._doc },
+        }
+      })
+      const order = new Order({
+        products: products,
+        user: {
+          email: req.user.email,
+          userId: req.user._id,
+        },
+      })
+      return order.save()
+    })
+    .then((result) => {
+      return req.user.clearCart()
+    })
+    .then((result) => {
+      res.redirect('/orders')
     })
     .catch((err) => {
       const error = new Error(err)
