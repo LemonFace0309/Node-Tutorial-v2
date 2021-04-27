@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs')
 
 const express = require('express')
 const mongoose = require('mongoose')
@@ -8,6 +9,7 @@ const csrf = require('csurf')
 const flash = require('connect-flash')
 const multer = require('multer')
 const helmet = require('helmet')
+const morgan = require('morgan')
 const compression = require('compression')
 require('dotenv').config()
 
@@ -23,8 +25,8 @@ const store = new MongoDBStore({
 const fileStorage = multer.diskStorage({
   destination: 'images',
   filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  }
+    cb(null, file.originalname)
+  },
 })
 
 const fileFilter = (req, file, cb) => {
@@ -33,9 +35,9 @@ const fileFilter = (req, file, cb) => {
     file.mimetype === 'image/jpg' ||
     file.mimetype === 'image/jpeg'
   ) {
-    cb(null, true);
+    cb(null, true)
   } else {
-    cb(null, false);
+    cb(null, false)
   }
 }
 
@@ -46,8 +48,14 @@ const adminRoutes = require('./routes/admin')
 const shopRoutes = require('./routes/shop')
 const authRoutes = require('./routes/auth')
 
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, 'access.log'),
+  { flags: 'a' }
+)
+
 app.use(helmet())
 app.use(compression())
+app.use(morgan('combined', { stream: accessLogStream}))
 
 app.use(express.urlencoded({ extended: false }))
 app.use(
